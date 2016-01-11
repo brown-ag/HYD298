@@ -73,5 +73,5 @@ agostino.test(sebou$maxQ)
 ```
 The Sebou River dataset has 41 observations. The calculated coefficient of skewness for this sample was 2.36, which is greater than the expected value (2.32, with std. dev of 0.77) for a sample of n=50 from a population with skewness coefficient of 3.00 (the largest value for skewness available in Table 7.3).
 
-Therefore, the skewness is likely to be significantly greater than zero. This can be confirmed by a visual check of the data in the histogram from part A which is clearly right-skewed. Further, the D’Agostino’s $K^2$ test suggests that the null hypothesis of a normal (skewness coefficient = 0) should be rejected.
+Therefore, the skewness is likely to be significantly greater than zero. This can be confirmed by a visual check of the data in the histogram from part A which is clearly right-skewed. Further, the D’Agostino’s $K^2$ test suggests that the null hypothesis of normal distribution (skewness coefficient = 0) should be rejected.
 
