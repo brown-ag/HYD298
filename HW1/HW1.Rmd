@@ -1,0 +1,77 @@
+---
+title: 'HYD298 - Homework #1'
+author: "Andrew Brown"
+date: "January 11, 2016"
+output: pdf_document
+---
+
+\subsection{7.12 Derive Kirby’s bound, Equation 7.45, on the estimate of the coefficient of skewness by computing the sample estimates of the skewness of the most skewed sample it would be possible to observe. Derive also the upper bound $(n - 1)^{1/2}$ for the estimate of the population coefficient of variation when all the observations must be nonnegative.}
+
+A) Coefficient of Skewness
+```{r}
+n=100000 #large n (needed for part B, mostly)
+foo=c(1,rep(0,n-1)) #most skewed sample
+```
+
+Maximized sample estimate of coefficient of skewness:
+```{r}
+coef_skew=function(xx) { 
+  #Calculates sample estimate of skewness coef
+  nn=length(xx)
+  (nn*sum((xx-mean(xx))^3)/((nn-1)*(nn-2)))/(sd(xx)^3)
+}
+coef_skew(foo)
+```
+
+Theoretical upper-bound (Kirby 1974; Bobee and Robitaille 1975)
+```{r, echo=FALSE}
+sqrt(n)
+```
+
+B) Population Coefficient of Variation
+
+```{r}
+mu=mean(foo) #population mean
+sigma=sd(foo)*(n-1)/n #population sd
+```
+
+Maximized population coefficient of variation:
+```{r}
+sigma/mu
+```
+Theoretical upper bound
+```{r}
+sqrt(length(foo)-1)
+```
+\subsection{7.17 The following data represent a sequence of annual flood flows, the maximum flow rate
+observed each year, for the Sebou River at the Azib Soltane gaging station in Morocco.}
+A) Construct a histogram of the Sebou flood flow data to see what the flow
+distribution looks like.
+```{r}
+sebou=read.csv("question2_sebou.csv")
+hist(sebou$maxQ)
+```
+B) Calculate the mean, variance, and sample skew. Based on Table 7.3, does the
+sample skew appear to be significantly different from zero?
+
+Mean fo Sebou River dataset:
+
+```{r}
+mean(sebou$maxQ)
+```
+
+Variance for Sebou River dataset:
+```{r}
+var(sebou$maxQ)
+```
+
+Sample skew coefficient for Sebou River dataset:
+```{r,warnings=FALSE}
+library(moments)
+coef_skew(sebou$maxQ)#*(sd(sebou$maxQ)^3)
+agostino.test(sebou$maxQ)
+```
+The Sebou River dataset has 41 observations. The calculated coefficient of skewness for this sample was 2.36, which is greater than the expected value (2.32, with std. dev of 0.77) for a sample of n=50 from a population with skewness coefficient of 3.00 (the largest value for skewness available in Table 7.3).
+
+Therefore, the skewness is likely to be significantly greater than zero. This can be confirmed by a visual check of the data in the histogram from part A which is clearly right-skewed. Further, the D’Agostino’s $K^2$ test suggests that the null hypothesis of a normal (skewness coefficient = 0) should be rejected.
+

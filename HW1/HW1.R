@@ -16,7 +16,10 @@ coef_skew=function(x,n) { #Calculates sample estimate of coefficient of skewness
   skew_you(x,n)/(sd(x)^3)
 }
 
-skewed_dat=c(10,0,0,0,0) #Highly (positively) skewed sample; only 1 nonzero value
+foo=100
+foo=c(100,rep(0,999))
+
+skewed_dat=c(100,0,0,0,0) #Highly (positively) skewed sample; only 1 nonzero value
 skewed_dat_neg=c(-10,0,0,0,0) #Highly (negatively) skewed sample; only 1 nonzero value
 less_skewed_dat=c(10,10,0,0,0) #Less (positively) skewed sample; 2 nonzero values
 random_dat=rnorm(5,5,2) #Random noisy sample
