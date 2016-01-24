@@ -1,0 +1,94 @@
+---
+title: 'HYD298 - Homework #2'
+author: "Andrew Brown"
+date: "January 13, 2016"
+output: pdf_document
+---
+\subsection { 7.3 In flood protection planning, the 100year flood, which is an estimate of the quantile $x_{0.99}$, is often used as the design flow. Assuming that the floods in different years are independently distributed: }
+(a) Show that the probability of at least one 100year flood in a 5year period is 0.049.
+```{r}
+#7.3a
+#Prob. of 1 or more 100yr floods in 5yr is 1 minus the probability 
+# of not observing a 100year flood in 5 years
+1-dbinom(0,5,1/100)
+```
+(b) What is the probability of at least one 100 year flood in a 100 year period?
+```{r}
+#7.3b
+#Probability of 1 or more 100 year floods in 100 years is 1 minus 
+# probability of not observing flood in 100 years
+1-dbinom(0,100,1/100)
+```
+
+(c) If floods at 1000 different sites occur independently, what is the probability of at least one 100year flood at some site in any single year?
+```{r}
+#7.3c
+#Because sites are independent and we are only considering 1 year, 
+# we have 1 year * 1000 sites opportunities to observe a 100 year flood event 
+# and are virtually certain to observe at least one. 
+1-dbinom(0,1*1000,1/100)
+```
+
+\subsection { 7.4 The price to be charged for water by an irrigation district has yet to be determined. }
+Currently it appears as if there is as 60% probability that the price will be $10 per unit of water and a 40% probability that the price will be $5 per unit. The demand for water is uncertain.
+The estimated probabilities of different demands given alternative prices are as follows: 
+```{r}
+p=c(5,10) #prices
+pp=c(0.4,0.6) #probability of prices
+
+q=c(30,55,80,100,120) #discrete quantities; q
+
+pqbar5=c(0,0.15,0.3,0.35,0.2) #conditional probabilities of levels of q given price = 5
+pqbar10=c(0.2,0.3,0.4,0.1,0) # " " " price = 10
+```
+
+(a) What is the most likely value of future revenue from water sales? 
+
+The most likely value of future revenue is calculated from the levels of price and quantity with highest joint probability. We can calculate joint probabilities of price and quantity from $P_{XY}=P_{X|Y}*P_Y$ where X = quantity and Y = price and $P_{X|Y}$ are the probabilities for discrete quantities conditioned on price.
+```{r}
+#7.4a 
+jointpq=rbind(data.frame(joint=pqbar5*pp[1],price=p[1],qty=q),
+          data.frame(joint=pqbar10*pp[2],price=p[2],qty=q))
+most_likely=which(jointpq$joint==max(jointpq$joint))
+mlrow=jointpq[most_likely,]
+```
+Most likely revenue (price*quantity) from water sales (in dollars):
+```{r}
+mlrow$price*mlrow$qty 
+```
+(b) What are the mean and variance of future water sales? (calculated for quantity, not revenue)
+```{r}
+#7.4b 
+mean_qty=sum(jointpq$joint*jointpq$qty)
+var_qty=sum(((jointpq$qty-mean_qty)^2)*jointpq$joint)
+```
+Mean and variance of future water sales:
+```{r}
+mean_qty
+var_qty
+```
+(c) What is the median value and interquartile range of future water sales? (calculated for quantity, not revenue)
+```{r}
+#7.4c
+combined=jointpq$joint[which(jointpq$price==5)]+jointpq$joint[which(jointpq$price==10)] 
+#probabilities assoc with each level of q, ignoring p
+cfor=cumsum(combined) #will also hold for rev(combined)
+median_qty=q[which(cfor >= 0.5)[1]]
+firstq_qty=q[which(cfor >= 0.25)[1]]
+thirdq_qty=q[which(cfor >= 0.75)[1]]
+```
+```{r}
+median_qty #median
+firstq_qty #first quartile
+thirdq_qty #third quartile
+```
+(d) What price will maximize the revenue from the sale of water?
+```{r}
+#7.4d
+for(i in p) {
+who=which(jointpq$price==i)
+print(paste("Price $",i,"/unit has expected revenue: $",
+        sum(jointpq$joint[who]*jointpq$price[who]*jointpq$qty[who]),sep=""))
+}
+```
+Therefore price level of $10 will maximize revenue from water sales.
