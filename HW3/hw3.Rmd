@@ -6,7 +6,6 @@ output: pdf_document
 ---
 \subsection{ Fit a normal distribution to the Sebou River dataset}
 ```{r}
-library(car)
 foo=read.csv("../HW1/sebou.csv")
 
 #Fit a normal distribution
@@ -74,7 +73,7 @@ Quantiles 1% and 99%:
 ```{r}
 qlnorm(meanlog=lmuhat,sdlog=sqrt(lvarhat),p=c(0.01,0.99))
 ```
-The lognormal distribution gives more physically realistic quantiles. There is not a 1:1 fit between the data and the lognormal but that is expected given the large uncertainty at the limits of the data range and that the 2parameter lognormal an approximation of a natural gradient. A log transformation produces a more appropriate fit. However, with small sample sizes (i.e. n=43) the results for predictive purposes may vary.
+The lognormal distribution gives more physically realistic quantiles. There is not a 1:1 fit between the data and the lognormal but that is expected given the large uncertainty at the limits of the data range and that the 2parameter lognormal an approximation of a natural gradient. A log transformation produces a more appropriate fit. However, with small sample sizes (i.e. n=41) the results for predictive purposes may vary.
 ```{r}
 z.lnorm<-(lmaxq-lmuhat)/sqrt(lvarhat)
 #plot normalized data versus normal reference line

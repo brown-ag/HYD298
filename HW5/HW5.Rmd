@@ -6,23 +6,29 @@ output: pdf_document
 ---
 \subsection{Q1: Gumbel}
 
-```{r}
+```{r,message=FALSE,warning=FALSE}
+library(fitdistrplus)
 foo=read.csv("..\\HW1\\sebou.csv")
 
 xx=sort(foo$maxQ,decreasing=FALSE)
-plot(density(xx),xlab="Discharge, cfs",ylab="Probability density",main="Empirical and modeled (Gumbel)\nprobability densities of Sebou R.\nmaximum annual flows",lty=1,lwd=2)
-#MM
+
+plot(density(xx),xlab="Discharge, cfs",ylab="Probability density",
+     main="Empirical and modeled (Gumbel)\nprobability densities of Sebou R.\nmaximum annual flows",lty=1,lwd=2)
+
+##### Method of Moments
 alpha=sqrt(6*var(xx)/pi^2)
 xii=mean(xx)-0.5772*alpha
 gum_pdf=(1/alpha)*exp(-((xx-xii)/alpha)-exp(-(xx-xii)/alpha))
 lines(xx,gum_pdf,col="BLUE",lty=2,lwd=2)
 gum_qua=xii-alpha*log(-log(c(0.01,0.99)))
+
 #PARAMETERS
 xii
 alpha
 #QUANTILES
 gum_qua
-#L-Moments
+
+##### L-Moments
 pwm_gum = function(x,r) {
   #calculates probability weightetd moments of order r
   # used for calculating betas and associated L-moments
@@ -42,13 +48,14 @@ xii=mean(xx)-0.5772*alpha
 gum_pdf=(1/alpha)*exp(-((xx-xii)/alpha)-exp(-(xx-xii)/alpha))
 gum_qua=xii-alpha*log(-log(c(0.01,0.99)))
 lines(xx,gum_pdf,col="RED",lty=2,lwd=2)
+
 #PARAMETERS
 xii
 alpha
 #QUANTILES
 gum_qua
-#MLE
-library(fitdistrplus)
+
+##### Maximum Likelihood
 dgumbel <- function(x, ps, al) {  exp((ps - x)/al - exp((ps - x)/al))/al }
 pgumbel <- function(q, ps, al) {  exp(-exp(-((q - ps)/al))) }
 qgumbel <- function(p, ps, al) {  ps-al*log(-log(p)) }
@@ -58,73 +65,107 @@ alpha=gumbel.fit$estimate['al'][[1]]
 gum_pdf=(1/alpha)*exp(-((xx-xii)/alpha)-exp(-(xx-xii)/alpha))
 lines(xx,gum_pdf,col="GREEN",lty=2,lwd=2)
 legend("topright", c("Empirical","MM","LM","MLE"), col=c('BLACK',"BLUE","RED","GREEN"), lty=c(1,2,2,2), lwd=2, title = "Legend")
-```
-```{r}
+
 #PARAMETERS:
 xii
 alpha
-```
-```{r}
+
 #QUANTILES:
-gum_qua
 quantile(gumbel.fit,probs=c(0.01,0.99))
 plot(gumbel.fit)
 ```
 
 \subsection{Q2: GEV}
-```{r}
-plot(density(xx),xlab="Discharge, cfs",ylab="Probability density",main="Empirical and modeled (GEV)\nprobability densities of Sebou R.\nmaximum annual flows",lty=1,lwd=2)
-#LM
-lambda1=mean(xx)
-beta1=pwm_gum(xx,1)
-beta2=pwm_gum(xx,2)
+```{r,message=FALSE,warning=FALSE}
+#gev density
+dgev=function (x, xi = 1, mu = 0, sigma = 1) {   
+  tmp <- (1 + (xi * (x - mu))/sigma)   
+  (as.numeric(tmp > 0) * (tmp^(-1/xi - 1) * exp(-tmp^(-1/xi))))/sigma 
+}
+#gev p fn
+pgev=function (q, xi = 1, mu = 0, sigma = 1) {   exp(-(1 + (xi * (q - mu))/sigma)^(-1/xi)) }
+#gev quantile fn
+qgev=function (p, xi = 1, mu = 0, sigma = 1) {  mu + (sigma/xi) * ((-logb(p))^(-xi) - 1) }
+
+plot(density(xx),xlab="Discharge, cfs",ylab="Probability density",
+     main="Empirical and modeled (GEV)\nprobability densities of Sebou R.\nmaximum annual flows",lty=1,lwd=2,ylim=c(0,2e-3))
+
+##### L-Moments
+pwm_gev=function(x,r) {
+  rr=seq(r+1,length(x))
+  sum(choose(rr-1,r)*x[rr]/choose(length(x),r+1))/(r+1)
+}
+lambda1=pwm_gev(xx,0) #=mean(xx)
+beta1=pwm_gev(xx,1)
+beta2=pwm_gev(xx,2)
 lambda2=2*beta1-lambda1
 lambda3=6*beta2-6*beta1+lambda1
+tau3=lambda3/lambda2
+cc=2/(tau3+3)-log(2)/log(3)
 #calculate kappa first
-cc=2*lambda2/(lambda3+3*lambda2)-(log(2)/log(3))
+cc=lambda2/(3*beta2-lambda1)-(log(2)/log(3))
 kappa=7.8590*cc+2.9554*(cc^2)
 alpha=kappa*lambda2/(gamma(1+kappa)*(1-2^-kappa))
 xii=lambda1+(alpha/kappa)*(gamma(1+kappa)-1)
 gev_cdf=exp(-(1-(kappa*(xx-xii)/alpha))^(1/kappa))
 gev_qua=xii+(alpha/kappa)*(1-(-log(c(0.01,0.99)))^kappa)
-#plot(ecdf(xx),main="Empirical and modeled (GEV) cumulative distribution function")
-#lines(ecdf(pgev(xx,xi=kappa,mu=xii,sigma=alpha)*max(xx)),lwd=2,lty=2,col='BLUE')
- #Lower bound
-xii+(alpha/kappa)
+lines(xx,dgev(xx,xi=kappa,mu=xii,sigma=alpha),col="BLUE",lty=2,lwd=3)
+ #Theoretical Upper bound
+xii-(alpha/kappa) #note that density function is undefined above this value
+
 #PARAMETERS
 xii
 alpha
 kappa
+
 #QUANTILES
 gev_qua
-#MLE
-library(fitdistrplus)
-#library(evir)
-dgev=function (x, xi = 1, mu = 0, sigma = 1) {   
-  tmp <- (1 + (xi * (x - mu))/sigma)   
-  (as.numeric(tmp > 0) * (tmp^(-1/xi - 1) * exp(-tmp^(-1/xi))))/sigma 
-}
-pgev=function (q, xi = 1, mu = 0, sigma = 1) {   exp(-(1 + (xi * (q - mu))/sigma)^(-1/xi)) }
-qgev=function (p, xi = 1, mu = 0, sigma = 1) {  mu + (sigma/xi) * ((-logb(p))^(-xi) - 1) }
+
+##### Maximum Likelihood
 gev.fit <- fitdist(xx, "gev", start=list(mu=0, sigma=1, xi=1), method="mle")
 xii=gev.fit$estimate['mu'][[1]]
 alpha=gev.fit$estimate['sigma'][[1]]
 kappa=gev.fit$estimate['xi'][[1]]
-legend("topright", c("Empirical","LM","MLE"), col=c('BLACK',"BLUE","GREEN"), lty=c(1,2,2), lwd=c(1,2,2), title = "Legend")
-```
-```{r}
+lines(xx,dgev(xx,xi=kappa,mu=xii,sigma=alpha),col="GREEN",lty=2,lwd=2)
+legend("topright", c("Empirical","LM","MLE","GMLE"), col=c('BLACK',"BLUE","GREEN","RED"), lty=c(1,2,2,2), lwd=c(1,2,2,2), title = "Legend")
+
 #PARAMETERS:
 xii
 alpha
 kappa
-```
-```{r}
+
 #QUANTILES:
-gum_qua
 quantile(gev.fit,probs=c(0.01,0.99))
+#plot(gev.fit)
 
-```{r}
-plot(gev.fit)
-```
+##### GMLE
+#A prior distribution that reflects general world-wide geophysical experience and physical realism is in the form of a beta distribution e.g:
+priork=function(kappa) {
+  p=6
+  q=9
+  gamma(p)*gamma(q)*((0.5+kappa)^(p-1))*((0.5-kappa)^(q-1))/gamma(p+q)
+}
+#Likelihood function to be optimized
+gmlf=function(p,x) {
+  xii=p[1]
+  alpha=p[2]
+  kappa=p[3]
+  yy=(1-(kappa/alpha)*(x-xii))
+  -length(x)*log(alpha)+sum((1/kappa-1)*log(yy)-yy^(1/kappa))+log(priork(kappa))
+}
+minoo=optim(fn=gmlf,par=c(xii,alpha,-0.47),x=xx)
+lines(xx,dgev(xx,mu=minoo$par[1],sigma=minoo$par[2],xi=minoo$par[3]),col="RED",lty=2,lwd=2)
+#QUANTILES
+qgev(p=c(0.01,0.99),mu=minoo$par[1],sigma=minoo$par[2],xi=minoo$par[3])
 
+# xi
+minoo$par[1]
+# alpha
+minoo$par[2]
+# kappa
+minoo$par[3]
 ```
+The GLME provides an excellent fit of the low-medium flows but the quantile corresponding to the 100yr flood is likely in error given the size of the dataset and the number of flows observed over that value. Here a prior distribution for $\kappa$ from Loucks and van Beek (2006) is employed to demonstrate how prior information can be implemented to improve on MLE estimates. It is recognized that this prior distribution has little/nothing to do with the Sebou River dataset.
+
+The starting points for the optimization are chosen based on the MLE parameters except in the case of $\kappa$. Optimizations using the MLE $\kappa$ were unstable. A value of -0.47 (estimated from l-moments) was chosen as the starting point. The optimum value for $\kappa$ was found to be stable from several starting points.
+

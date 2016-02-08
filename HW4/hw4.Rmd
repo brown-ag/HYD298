@@ -1,0 +1,71 @@
+---
+title: 'HYD298 - Homework #4'
+author: "Andrew Brown"
+date: "February 7, 2016"
+output: pdf_document
+---
+\subsection{3 parameter Lognormal Distribution}
+```{r,message=FALSE,warning=FALSE}
+library(agricolae)
+foo=read.csv("../HW1/sebou.csv")
+xx=sort(foo$maxQ,decreasing=FALSE)
+dlnorm3 = function (X, m, s, t) {
+ (1/((X-t)*s*(2*pi)^0.5))*exp(((-(log(X-t)-m)^2)/(2*s^2)))
+}
+#3 PARAMETER LOGNORMAL
+first=1
+last=length(xx)
+#stedinger lower quantile bound for threshold
+chat=(xx[first]*xx[last]-(median(xx)^2))/(xx[first]+xx[last]-2*median(xx))
+plot(density(xx), main="Sebou R.  Lognormal 3-parameter Dist.\nwith real and log-space mean/variance",ylim=c(0,1.5E-3),ylab="Probability density",xlab="Maximum yearly discharge, m^3/s")
+#realspace
+lines(xx,dlnorm3(xx,log(mean(xx)),log(sd(xx)),chat),lwd=2,lty=2,col="BLUE")
+#realspace mean (log transformed)
+log(mean(xx))
+#realspace sd (log transformed)
+log(sd(xx))
+#quantiles
+qlnorm(p=c(0.01,0.99),meanlog=mean(log(xx)),sdlog=sd(log(xx)))
+
+#logspace
+s_logs=sqrt(log(1+(sd(xx)/mean(xx))^2))
+m_logs=(log(mean(xx))-0.5*(s_logs^2))
+lines(xx,dlnorm3(xx,m_logs,s_logs,chat),lwd=2,lty=3,col="RED")
+legend("topright", c("Empirical","Real space","Log space"), lty=c(1,2,3), col=c("BLACK","BLUE","RED"),lwd=c(1,2,2), title = "Legend")
+#log-space mean
+m_logs
+#log-space sd
+s_logs
+#quantiles
+qlnorm(p=c(0.01,0.99),meanlog=m_logs,sdlog=s_logs)
+
+
+#2-parameter Gamma
+alpha_hat=(mean(xx)^2)/(sd(xx)^2)
+beta_hat=(mean(xx)/(sd(xx)^2))
+plot(xx,dgamma(xx,alpha_hat,beta_hat),ylim=c(0,1E-3),ylab="Probability density",xlab="Maximum yearly discharge, m^3/s",main="Method of Moments estimators - 2 and 3 Parameter Gamma Distribution")
+qgam2=qgamma(shape=alpha_hat,scale=beta_hat,p=c(0.01,0.99))
+data.frame(shape=alpha_hat,scale=beta_hat)
+qgamma(p=c(0.01,0.99),alpha_hat,beta_hat)
+
+#3-parameter Gamma
+dgamma3 = function (x, aa = 1, bb = 2, tt = 0) {
+  (bb^aa)*(x-tt)^(aa-1)*exp(-(x-tt)*bb)/gamma(aa)
+}
+qgamma3=function(x,mu,sigma,gam) {
+  #Uses Wilson-Hilferty transformation
+  mu+sigma*((2/gam*(1+(gam*x/6)-((gam^2)/36))^3)-(2/gam))
+}
+tau_hat=mean(xx)-2*(sd(xx)/skewness(xx))
+alpha_hat=4/(skewness(xx)^2)
+beta_hat=(2/(sd(xx)*skewness(xx)))
+lines(xx,dgamma3(xx,alpha_hat,beta_hat,tau_hat))
+legend("topright", c("2 Param.","3 Param."), pch=c(1,-1),lty=c(0,1), lwd=c(1,1), title = "Legend")
+
+#parameters
+data.frame(shape=alpha_hat,scale=beta_hat,location=tau_hat)
+
+#quantiles
+qgamma3(qnorm(p=c(0.01,0.99)),mean(xx),sd(xx),skewness(xx))
+
+```

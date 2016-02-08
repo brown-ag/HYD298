@@ -61,53 +61,88 @@ quantile(gumbel.fit,probs=c(0.01,0.99))
 plot(gumbel.fit)
 
 #Q2: GEV
-plot(density(xx),xlab="Discharge, cfs",ylab="Probability density",main="Empirical and modeled (GEV)\nprobability densities of Sebou R.\nmaximum annual flows",lty=1,lwd=2)
-#LM
-pwm_gev=function(x,r) {
-  (1/(r+1))*(xii+(alpha/kappa*(1-gamma(1+kappa)/(r+1)^kappa)))
+dgev=function (x, xi = 1, mu = 0, sigma = 1) {   
+#tmp <- (1 + (xi * (x - mu))/sigma)   
+#(as.numeric(tmp > 0) * (tmp^(-1/xi - 1) * exp(-tmp^(-1/xi))))/sigma 
+if(xi==0) {
+    ttt=(exp(-(x-mu)/sigma))
+} else {
+    ttt=(1+((x-mu)/sigma)*xi)^(-1/xi)
 }
-lambda1=mean(xx)
-beta1=pwm_gum(xx,1)
-beta2=pwm_gum(xx,2)
+  print(ttt)
+  1/sigma*(ttt^(xi+1))*exp(-ttt)  
+}
+#gev p fn
+pgev=function (q, xi = 1, mu = 0, sigma = 1) {   exp(-(1 + (xi * (q - mu))/sigma)^(-1/xi)) }
+#gev quantile fn
+qgev=function (p, xi = 1, mu = 0, sigma = 1) {  mu + (sigma/xi) * ((-logb(p))^(-xi) - 1) }
+
+plot(density(xx),xlab="Discharge, cfs",ylab="Probability density",
+     main="Empirical and modeled (GEV)\nprobability densities of Sebou R.\n
+     maximum annual flows",lty=1,lwd=2,ylim=c(0,2e-3))
+
+##### L-Moments
+pwm_gev=function(x,r) {
+  rr=seq(r+1,length(x))
+  sum(choose(rr-1,r)*x[rr]/choose(length(x),r+1))/(r+1)
+}
+lambda1=pwm_gev(xx,0) #=mean(xx)
+beta1=pwm_gev(xx,1)
+beta2=pwm_gev(xx,2)
 lambda2=2*beta1-lambda1
 lambda3=6*beta2-6*beta1+lambda1
+tau3=lambda3/lambda2
+cc=2/(tau3+3)-log(2)/log(3)
 #calculate kappa first
-cc=2*lambda2/(lambda3+3*lambda2)-(log(2)/log(3))
+cc=lambda2/(3*beta2-lambda1)-(log(2)/log(3))
 kappa=7.8590*cc+2.9554*(cc^2)
 alpha=kappa*lambda2/(gamma(1+kappa)*(1-2^-kappa))
 xii=lambda1+(alpha/kappa)*(gamma(1+kappa)-1)
 gev_cdf=exp(-(1-(kappa*(xx-xii)/alpha))^(1/kappa))
 gev_qua=xii+(alpha/kappa)*(1-(-log(c(0.01,0.99)))^kappa)
-plot(ecdf(xx),main="Empirical and modeled (GEV) cumulative distribution function")
-lines(ecdf(pgev(xx,xi=kappa,mu=xii,sigma=alpha)*max(xx)),lwd=2,lty=2,col='BLUE')
- #Lower bound
-xii+(alpha/kappa)
+lines(xx,dgev(xx,xi=kappa,mu=xii,sigma=alpha),col="BLUE",lty=2,lwd=3)
+#Theoretical Upper bound
+xii-(alpha/kappa) #note that density function is undefined above this value
+
 #PARAMETERS
 xii
 alpha
 kappa
+
 #QUANTILES
 gev_qua
 
-#MLE
-library(fitdistrplus)
-#library(evir)
-dgev=function (x, xi = 1, mu = 0, sigma = 1) {   
-  tmp <- (1 + (xi * (x - mu))/sigma)   
-  (as.numeric(tmp > 0) * (tmp^(-1/xi - 1) * exp(-tmp^(-1/xi))))/sigma 
-}
-pgev=function (q, xi = 1, mu = 0, sigma = 1) {   exp(-(1 + (xi * (q - mu))/sigma)^(-1/xi)) }
-qgev=function (p, xi = 1, mu = 0, sigma = 1) {  mu + (sigma/xi) * ((-logb(p))^(-xi) - 1) }
+##### Maximum Likelihood
+#gev density fn
+
 gev.fit <- fitdist(xx, "gev", start=list(mu=0, sigma=1, xi=1), method="mle")
 xii=gev.fit$estimate['mu'][[1]]
 alpha=gev.fit$estimate['sigma'][[1]]
 kappa=gev.fit$estimate['xi'][[1]]
+lines(xx,dgev(xx,xi=kappa,mu=xii,sigma=alpha),col="GREEN",lty=2,lwd=2)
 legend("topright", c("Empirical","LM","MLE"), col=c('BLACK',"BLUE","GREEN"), lty=c(1,2,2), lwd=c(1,2,2), title = "Legend")
+
 #PARAMETERS:
 xii
 alpha
 kappa
+
 #QUANTILES:
-gum_qua
 quantile(gev.fit,probs=c(0.01,0.99))
 plot(gev.fit)
+
+#GMLE
+priork=function(kappa) {
+  p=6
+  q=9
+  gamma(p)*gamma(q)*((0.5+kappa)^(p-1))*((0.5-kappa)^(q-1))/gamma(p+q)
+}
+gmlf=function(p,xx) {
+  xii=p[1]
+  alpha=p[2]
+  kappa=p[3]
+  yy=(1-(kappa/alpha)*(xx-xii))
+  -length(xx)*log(alpha)+sum((1/kappa-1)*log(yy)-yy^(1/kappa))+log(priork(kappa))
+}
+minll=nlm(f=gmlf,p=c(xii,alpha,kappa),xx)
+lines(xx,dgev(xx,mu=minll$estimate[1],sigma=minll$estimate[2],xi=minll$estimate[3]))
