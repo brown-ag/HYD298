@@ -13,7 +13,7 @@ pphaz=function(i,n)  { (i-(0.5))/(n) }
 ppblom=function(i,n) { (i-(3/8))/(n+(1/4)) }
 varpi=function(i,n)  { (i*(n-i-1))/(((n+1)^2)*(n+2)) }
 ```
-Generate a random lognormal with n=100 observations logmean=3 logsd=2; sort it from largest->smallest:
+Generate a random lognormal with n=100 observations logmean=3 logsd=1; sort it from largest->smallest:
 ```{r}
 lll=rlnorm(n=100,meanlog=3,sdlog=1)
 lll=sort(lll,decreasing=TRUE)
@@ -72,6 +72,7 @@ ks.lo=qnorm(down,mean=mean(sebou$maxQ),sd=sd(sebou$maxQ))
 ks.hi.l=qlnorm(up,meanlog=mean(log(sebou$maxQ)),sdlog=sd(log(sebou$maxQ)))
 ks.lo.l=qlnorm(down,meanlog=mean(log(sebou$maxQ)),sdlog=sd(log(sebou$maxQ)))
 ```
+Reject null hypothesis of normally distributed maximum annual flows for Sebou R. data. Calculate critical value of test significance for 95% confidence interval and the upper and lower KS bounds for plotting in next step.
 ```{r}
 #7.17c - Normal
 qfit=qnorm(ppblom(1:n,n),mean=mean(sebou$maxQ),sd=sd(sebou$maxQ))
@@ -97,4 +98,4 @@ lines(qlfit,ks.lo.l,lty=3,lwd=2)
 abline(0,1)
 ```
 After consulting the full table of percent points from Filliben (1975) for n=41, the value of r at the 5% level is 0.972. Niether of the correlation coefficients exceed this value. T The normal is generally not a good fit at all, especially due to the issues with symmetry and necessarily positive values for discharge. Lack of normality is confirmed using the Komolgorov-Smirnov test and visually by plotting the 95% confidence interval. 
- he lognormal is likely adequate for the mid-range of flows, but becomes inaccurate at very low and very high flows. Further, the KS upper bounds are undefined for the high flows and the KS lower bounds undefined for the low flows which illustrates the uncertainty these models have in that range.
+ he lognormal is likely adequate for the mid-range of flows, but becomes inaccurate at very low and very high flows. Further, the KS upper bounds are infinite for the high flows and the KS lower bounds negative for the low flows which illustrates the uncertainty these models have in those ranges.
