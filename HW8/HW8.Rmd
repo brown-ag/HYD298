@@ -1,0 +1,53 @@
+---
+title: 'HYD298 - Homework #8'
+author: "Andrew Brown"
+date: "February 17th, 2016"
+output: pdf_document
+---
+
+### 1. 	For the data in problem 3-17, construct a 90% confidence interval for the 90 and 99 percentiles based upon a 2-parameter lognormal fit to the data. See Stedinger, 1983, for formula based on asymptotic and non-central t distribution.
+
+```{r}
+sebou=read.csv("../HW1/sebou.csv")
+sebou$maxQ=sort(sebou$maxQ)
+nn=length(sebou$maxQ)
+ppwei=function(i,n)  { i/(n+1) }
+qlfit=qlnorm(c(0.9,0.99),meanlog=mean(log(sebou$maxQ)),sdlog=sd(log(sebou$maxQ)))
+zhi=1.645
+zpis=c(1.645,2.576)
+sdsebou=sd(log(sebou$maxQ))
+ciup=exp(log(qlfit)+zhi*sdsebou*sqrt((1+((1/2)*zpis^2))/nn))
+cilo=exp(log(qlfit)-zhi*sdsebou*sqrt((1+((1/2)*zpis^2))/nn))
+data.frame(percentile=c(0.9,0.99),estimate=qlfit,ubnd=ciup,lbnd=cilo)
+```
+
+### 2.	Please construct a 90% confidence interval for the 90 and 99 percentiles of a Gumbel fit to the data in 3-17 using L-moments. See Hdbk 18.4.4.
+
+```{r}
+peye=c(0.9,0.99)
+pwm_gum = function(x,r) {
+  #calculates probability weightetd moments of order r
+  # used for calculating betas and associated L-moments
+  cs=0
+  n=length(x)
+  for(i in seq(1,n-r)) {
+    cs=cs+(choose(n-i,r)*x[i])/choose(n-1,r)
+  }
+  return(cs/n)
+}
+
+lambda1=mean(sebou$maxQ)
+beta1=pwm_gum(sort(sebou$maxQ,decreasing=TRUE),1)
+lambda2=2*beta1-lambda1
+alpha=lambda2/log(2)
+xii=mean(sebou$maxQ)-0.5772*alpha
+gum_qua=xii-alpha*log(-log(peye))
+redvar=-log(-log(peye))
+varxphat=((alpha^2)*((1.1128-0.9066/nn)-(0.4574-1.1722*nn)*redvar+(0.8046-0.1855/nn)*(redvar^2)))/(nn-1)
+ciup2=gum_qua+zhi*sqrt(varxphat)
+cilo2=gum_qua-zhi*sqrt(varxphat)
+data.frame(percentile=c(0.9,0.99),estimate=gum_qua,ubnd=ciup2,lbnd=cilo2)
+```
+
+### 3.	Why is it more difficult to construct good CI for a 3-parameter LN or a 3-parameter GEV distribution fit to a data set?
+Uncertainty about the distribution of the third parameter (tau, kappa) results in an amplification of the confidence interval. When all three parameters are being estimated, errors in the estimation of the third parameter will propagate into the results for the other parameters. The asymptotic formulas for the variance of the three-parameter GEV quantile estimators are inaccurate for small sample sizes. 

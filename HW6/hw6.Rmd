@@ -1,5 +1,5 @@
 ---
-title: "HW6"
+title: "HYD298 - Homework #6"
 author: "Andrew Brown"
 date: "February 17, 2016"
 output: pdf_document
@@ -44,8 +44,8 @@ mqhaz=max(qihaz)
 mqblo=max(qiblom) 
 data.frame(Weibull=mqwei,Hazen=mqhaz,Blom=mqblo,Actual=max(lll))
 ```
-Comparison of the expected value for the largest observation using the three plotting positions and the actual largest extreme value. In general, these plotting positions fail to predict the magnitude of the 100 year flood (largest of 100 values in dataset). The relative magnitude of the offset of the different plotting positions
-#In general, plotting positions do not differ greatly from one another. However, they are crude estimates of the exceedence probabilities of extreme values (e.g. smallest or largest obs).
+Comparison of the expected value for the largest observation using the three plotting positions and the actual largest extreme value. In general, these plotting positions fail to predict the magnitude of the 100 year flood (largest of 100 values in dataset). 
+In general, plotting positions do not differ greatly from one another. However, they are all crude estimates of the exceedence probabilities of extreme values (e.g. smallest or largest obs). Further, with generation of multiple random lognormal datasets, they do not consistently under or overestimate the larges/smallest value.
 ```{r}
 data.frame(Min=0.29/100,Max=1.38/(100+2),Weibull=1-max(pwei),Hazen=1-max(phaz),Blom=1-max(pblom),StDev=sddd[1])
 ```
@@ -97,5 +97,6 @@ lines(qlfit,ks.hi.l,lty=3,lwd=2)
 lines(qlfit,ks.lo.l,lty=3,lwd=2)
 abline(0,1)
 ```
-After consulting the full table of percent points from Filliben (1975) for n=41, the value of r at the 5% level is 0.972. Niether of the correlation coefficients exceed this value. T The normal is generally not a good fit at all, especially due to the issues with symmetry and necessarily positive values for discharge. Lack of normality is confirmed using the Komolgorov-Smirnov test and visually by plotting the 95% confidence interval. 
- he lognormal is likely adequate for the mid-range of flows, but becomes inaccurate at very low and very high flows. Further, the KS upper bounds are infinite for the high flows and the KS lower bounds negative for the low flows which illustrates the uncertainty these models have in those ranges.
+After consulting the full table of percent points from Filliben (1975) for n=41, the value of r at the 5% level is 0.972. Niether of the correlation coefficients exceed this value. T The normal is generally not a good fit at all, especially due to the issues with symmetry and necessarily positive values for discharge. Lack of normality is confirmed using the Komolgorov-Smirnov test and visually by plotting the 95% confidence interval (shown here as dotted lines). The lognormal is likely adequate for the mid-range of flows but becomes inaccurate at very high flows. Further, the KS upper bounds are infinite (taking inverse of cdf of a probability greater than 1) for the high flows and the KS lower bounds negative infinity (inverse cdf of p<0) for the low flows which illustrates the uncertainty these models have in those ranges.
+ 
+For selecting a plotting position the choice is somewhat arbitrary. Ideally you will choose a position that is quantile unbiased for the distribution of interest.
